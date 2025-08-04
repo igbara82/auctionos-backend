@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AuctionOS Lot Uploader & GPT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Arial, sans-serif;
+      background: #fff;
+      color: #15161a;
+      margin: 0; padding: 0;
+      letter-spacing: -0.01em;
+      transition: background .25s, color .18s;
+    }
+    body.dark {
+      background: #15161a;
+      color: #f3f4f8;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 6px 32px 0 rgba(30,40,60,0.08);
+      padding: 2.4rem 2rem;
+      border: 1.5px solid #f1f1f1;
+      transition: background .25s, color .18s, border .2s;
+    }
+    body.dark .container {
+      background: #191b22;
+      color: #f3f4f8;
+      border: 1.5px solid #262b33;
+      box-shadow: 0 10px 32px 0 rgba(14,19,32,0.14);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #15161a;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      transition: color .2s;
+    }
+    body.dark h1, body.dark h2 {
+      color: #fafcff;
+    }
+    label {
+      font-weight: 500;
+      margin-top: 1rem;
+      display: block;
+      color: #232429;
+      transition: color .18s;
+    }
+    body.dark label { color: #f4f7fb; }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 12px;
+      border: 1.5px solid #e2e3e9;
+      background: #fff;
+      font-size: 1.06rem;
+      transition: border .2s, background .18s, color .15s;
+      color: #15161a;
+    }
+    input[type="text"]:focus, textarea:focus {
+      border-color: #35363b;
+      outline: none;
+    }
+    body.dark input[type="text"], body.dark textarea {
+      background: #262b33;
+      border: 1.5px solid #323846;
+      color: #fafcff;
+    }
+    .lot-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid #ebebeb;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      position: relative;
+      box-shadow: 0 3px 18px 0 rgba(32,34,40,0.05);
+      transition: background .2s, color .2s, border .2s;
+    }
+    .lot-card:hover {
+      box-shadow: 0 8px 30px 0 rgba(32,34,40,0.09);
+    }
+    body.dark .lot-card {
+      background: #23262e;
+      border: 1.5px solid #333642;
+      color: #f3f4f8;
+    }
+    .lot-card .remove-lot {
+      position: absolute; right: 16px; top: 16px;
+      border: none;
+      padding: 0.37rem 0.85rem;
+      border-radius: 8px;
+      font-size: .98rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+      background: #15161a;
+      color: #fff;
+    }
+    body.dark .lot-card .remove-lot {
+      background: #fff;
+      color: #15161a;
+    }
+    .img-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 0.5rem;
+    }
+    .img-preview img {
+      width: 82px;
+      height: 82px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1.5px solid #e2e3e9;
+      background: #f8f8f8;
+      box-shadow: 0 1px 8px 0 rgba(24,34,60,0.05);
+      transition: box-shadow .16s, border .2s;
+    }
+    body.dark .img-preview img {
+      border: 1.5px solid #35363b;
+      background: #23262e;
+    }
+    .drag-drop {
+      border: 2.5px dashed #35363b;
+      background: #fafafd;
+      border-radius: 13px;
+      text-align: center;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      font-size: 1.07rem;
+      color: #27282d;
+      font-weight: 500;
+      transition: background 0.22s, border 0.2s, color .2s;
+    }
+    .drag-drop.dragover {
+      background: #f0f2f6;
+      border-color: #15161a;
+    }
+    body.dark .drag-drop {
+      border: 2.5px dashed #fff;
+      background: #23262e;
+      color: #f3f4f8;
+    }
+    .assistant {
+      background: #fafafd;
+      border: 1.5px solid #ebebeb;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px 0 rgba(18,30,56,0.03);
+      transition: background .2s, color .2s, border .2s;
+    }
+    body.dark .assistant {
+      background: #191b22;
+      border: 1.5px solid #323846;
+      color: #fafcff;
+    }
+    .assistant textarea, .assistant input[type="file"] {
+      width: 100%;
+      border-radius: 10px;
+      border: 1.5px solid #e2e3e9;
+      background: #fff;
+      font-size: 1.03rem;
+      margin-top: 0.2rem;
+      margin-bottom: 0.5rem;
+      color: #15161a;
+      transition: background .18s, color .18s, border .18s;
+    }
+    body.dark .assistant textarea, body.dark .assistant input[type="file"] {
+      background: #23262e;
+      color: #f4f7fb;
+      border: 1.5px solid #393c45;
+    }
+    .assistant-response {
+      background: #f5f6fa;
+      border: 1.5px solid #d7d8dd;
+      border-radius: 11px;
+      padding: 1rem;
+      margin-top: 0.5rem;
+      font-family: "SF Mono", "JetBrains Mono", "Menlo", "monospace";
+      white-space: pre-wrap;
+      font-size: 1.07rem;
+      color: #1b1c20;
+      transition: background .2s, color .2s, border .2s;
+    }
+    body.dark .assistant-response {
+      background: #22242c;
+      border: 1.5px solid #323846;
+      color: #fafcff;
+    }
+    .done-section {
+      margin-top: 2.5rem;
+    }
+    .done-lot {
+      background: #f9fafa;
+      border-radius: 11px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1.5px solid #e2e3e9;
+      transition: background .2s, border .2s, color .2s;
+    }
+    .done-lot .img-preview img {
+      border: 1.5px solid #bac8e1;
+    }
+    body.dark .done-lot {
+      background: #23262e;
+      border: 1.5px solid #35363b;
+      color: #fafcff;
+    }
+    .toggle-mode {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 0.6rem;
+    }
+    .toggle-btn {
+      border: none;
+      padding: 0.45rem 1.4rem;
+      border-radius: 999px;
+      background: #15161a;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-left: auto;
+      margin-right: 0;
+      transition: background .17s, color .17s;
+      outline: none;
+    }
+    body.dark .toggle-btn {
+      background: #fff;
+      color: #15161a;
+      border: 1.5px solid #23262e;
+    }
+    @media (max-width: 650px) {
+      .container { padding: 0.5rem; }
+      .lot-card { padding: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toggle-mode">
+    <button id="modeToggle" class="toggle-btn">🌙 Dark Mode</button>
+  </div>
+  <div class="container">
+    <h1>AuctionOS Lot Uploader & GPT</h1>
+    <!-- AuctionGPT Assistant -->
+    <div class="assistant">
+      <h2>Ask AuctionGPT</h2>
+      <textarea id="gptInput" rows="2" placeholder="Paste a description, ask for rewrite, SEO or info..."></textarea>
+      <input type="file" id="gptFile" accept="image/*" style="margin: 0.75rem 0 0.25rem 0;">
+      <button id="gptAskBtn">Ask / Rewrite</button>
+      <div id="gptResponse" class="assistant-response" style="display:none;"></div>
+    </div>
+    <!-- Lot Upload Section -->
+    <h2>Add Lots (Up to 10 at a time, 20 images per lot)</h2>
+    <form id="lotsForm">
+      <div id="lotsArea"></div>
+      <button type="button" id="addLotBtn">+ Add Lot</button>
+      <button type="submit" style="float:right">Upload All Lots</button>
+      <div style="clear:both"></div>
+    </form>
+    <!-- Done Lots Section -->
+    <div class="done-section">
+      <h2>✅ Done Lots</h2>
+      <div id="doneLots"></div>
+    </div>
+  </div>
+  <script>
+    // --------- Light/Dark Mode Toggle -----------
+    const modeToggle = document.getElementById('modeToggle');
+    function setMode(dark) {
+      if (dark) {
+        document.body.classList.add('dark');
+        modeToggle.innerHTML = "☀️ Light Mode";
+      } else {
+        document.body.classList.remove('dark');
+        modeToggle.innerHTML = "🌙 Dark Mode";
+      }
+      localStorage.setItem("auctionOS-mode", dark ? "dark" : "light");
+    }
+    modeToggle.onclick = () => {
+      setMode(!document.body.classList.contains('dark'));
+    };
+    // Load mode from localStorage
+    setMode(localStorage.getItem("auctionOS-mode") === "dark");
+
+    // --------- AuctionGPT Assistant (w/ image upload) ---------
+    const gptAskBtn = document.getElementById('gptAskBtn');
+    const gptInput = document.getElementById('gptInput');
+    const gptFile = document.getElementById('gptFile');
+    const gptResponse = document.getElementById('gptResponse');
+    gptAskBtn.onclick = async function() {
+      const prompt = gptInput.value.trim();
+      const file = gptFile.files[0];
+      if (!prompt && !file) return alert("Paste a question or upload an image!");
+      gptResponse.style.display = 'block';
+      gptResponse.textContent = "Thinking...";
+      // DEMO: Replace with real backend for actual image+text AI!
+      setTimeout(() => {
+        if (file) {
+          gptResponse.textContent = "AuctionGPT demo:\n(You uploaded: " + file.name + ")\n" +
+            (prompt ? "Q: " + prompt : "") +
+            "\n(Connect to your backend/AI for true image analysis!)";
+        } else {
+          gptResponse.textContent = "AuctionGPT demo: " + prompt + "\n(Connect to OpenAI API for real responses!)";
+        }
+      }, 1300);
+    };
+
+    // ------------- Lot Card Logic -------------
+    const lotsArea = document.getElementById('lotsArea');
+    const doneLots = document.getElementById('doneLots');
+    const addLotBtn = document.getElementById('addLotBtn');
+    let lots = [];
+    let lotId = 1;
+    const MAX_LOTS = 10;
+    const MAX_IMAGES = 20;
+
+    function createLotCard(lot) {
+      const card = document.createElement('div');
+      card.className = 'lot-card';
+      card.dataset.lotId = lot.id;
+
+      card.innerHTML = `
+        <button class="remove-lot">Remove</button>
+        <label>Lot Number <input type="text" class="lot-number" value="${lot.number || ''}" required></label>
+        <label>Description <textarea class="lot-desc" rows="2">${lot.description || ''}</textarea></label>
+        <label>Images
+          <div class="drag-drop" id="dragDrop_${lot.id}">Drag & drop up to 20 images, or click to select</div>
+          <input type="file" class="lot-images" accept="image/*" multiple style="display:none">
+          <div class="img-preview" id="imgPreview_${lot.id}"></div>
+        </label>
+        <div class="lot-actions"></div>
+      `;
+      // Remove Lot
+      card.querySelector('.remove-lot').onclick = () => {
+        lots = lots.filter(l => l.id !== lot.id);
+        renderLots();
+      };
+      // Update lot fields
+      card.querySelector('.lot-number').oninput = e => { lot.number = e.target.value; };
+      card.querySelector('.lot-desc').oninput = e => { lot.description = e.target.value; };
+      // Drag & drop logic
+      const dragDrop = card.querySelector(`#dragDrop_${lot.id}`);
+      const fileInput = card.querySelector('.lot-images');
+      dragDrop.onclick = () => fileInput.click();
+      dragDrop.ondragover = (e) => { e.preventDefault(); dragDrop.classList.add('dragover'); };
+      dragDrop.ondragleave = (e) => { e.preventDefault(); dragDrop.classList.remove('dragover'); };
+      dragDrop.ondrop = (e) => {
+        e.preventDefault(); dragDrop.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files).slice(0, MAX_IMAGES);
+        addImagesToLot(lot, files);
+      };
+      fileInput.onchange = () => {
+        const files = Array.from(fileInput.files).slice(0, MAX_IMAGES);
+        addImagesToLot(lot, files);
+      };
+      renderPreviewImages(lot, card.querySelector(`#imgPreview_${lot.id}`));
+      return card;
+    }
+    function addImagesToLot(lot, files) {
+      if (!lot.images) lot.images = [];
+      lot.images = lot.images.concat(files).slice(0, MAX_IMAGES);
+      renderLots();
+    }
+    function renderPreviewImages(lot, previewDiv) {
+      previewDiv.innerHTML = '';
+      if (lot.images && lot.images.length) {
+        lot.images.forEach((img, idx) => {
+          const url = URL.createObjectURL(img);
+          const imgEl = document.createElement('img');
+          imgEl.src = url;
+          imgEl.title = img.name;
+          imgEl.onload = () => { URL.revokeObjectURL(url); };
+          previewDiv.appendChild(imgEl);
+        });
+        if (lot.images.length >= MAX_IMAGES) {
+          const maxMsg = document.createElement('div');
+          maxMsg.style.color = "#e03c3c";
+          maxMsg.textContent = `Max ${MAX_IMAGES} images reached.`;
+          previewDiv.appendChild(maxMsg);
+        }
+      }
+    }
+    function renderLots() {
+      lotsArea.innerHTML = '';
+      lots.forEach(lot => {
+        lotsArea.appendChild(createLotCard(lot));
+      });
+      if (lots.length >= MAX_LOTS) addLotBtn.disabled = true;
+      else addLotBtn.disabled = false;
+    }
+    addLotBtn.onclick = () => {
+      if (lots.length >= MAX_LOTS) return;
+      lots.push({ id: lotId++, number: '', description: '', images: [] });
+      renderLots();
+    };
+    // Add one lot by default
+    addLotBtn.onclick();
+
+    // ------------- Upload All Lots Logic -------------
+    document.getElementById('lotsForm').onsubmit = async function(e) {
+      e.preventDefault();
+      for (let lot of lots) {
+        if (!lot.number) return alert("Lot number is required for all lots!");
+        if (!lot.images.length) return alert("At least one image is required for each lot!");
+      }
+      const formData = new FormData();
+      lots.forEach((lot, idx) => {
+        formData.append(`lotNumbers`, lot.number);
+        formData.append(`descriptions`, lot.description);
+        lot.images.forEach((img, i) => {
+          formData.append(`images_${lot.number}`, img);
+        });
+      });
+      const res = await fetch('https://auctionos-backend.onrender.com/upload-lot-images', {
+        method: 'POST',
+        body: formData
+      });
+      const json = await res.json();
+      if (json.status === 'success') {
+        showDoneLots(json.result);
+        lots = [];
+        renderLots();
+      } else {
+        alert(json.error || "Unknown error uploading lots.");
+      }
+    };
+
+    function showDoneLots(results) {
+      doneLots.innerHTML = '';
+      Object.entries(results).forEach(([lotNumber, data]) => {
+        const div = document.createElement('div');
+        div.className = 'done-lot';
+        div.innerHTML = `<strong>Lot ${lotNumber}</strong><br>
+          Images uploaded: ${data.filenames.length}<br>
+          <a href="${data.zipUrl}" target="_blank">Download all images as ZIP</a>
+          <div class="img-preview"></div>
+        `;
+        const previewDiv = div.querySelector('.img-preview');
+        data.filenames.forEach(url => {
+          const img = document.createElement('img');
+          img.src = url;
+          previewDiv.appendChild(img);
+        });
+        doneLots.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
